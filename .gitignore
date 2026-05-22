@@ -1,0 +1,9 @@
+*.pyc
+*.pyo
+*.pyd
+__pycache__/
+
+.vscode/
+.ipynb_checkpoints/
+data/
+paper_tex_source/
