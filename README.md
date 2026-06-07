@@ -236,6 +236,8 @@ Install the dependencies once:
 pip install torch torchvision matplotlib numpy
 ```
 
+All trained checkpoints (the `.pt` files referenced in the commands below) are also available as a [Google Drive folder](https://drive.google.com/drive/folders/1rnY2JIFn6feXVKZFIMgUuNoa-jWQE3il?usp=sharing). Drop them into `checkpoints/` if you want to skip the training scripts and jump straight to the analysis or attack steps.
+
 To reproduce **Step 3 (Figure 2 a, b)**:
 
 ```bash
