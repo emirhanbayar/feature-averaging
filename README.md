@@ -188,3 +188,69 @@ The 2-class model cliffs around ε ≈ 18 and the 10-class around ε ≈ 38. The
 The qualitative shape matches: 10-class sits consistently above 2-class, the 2-class curve collapses to near zero by ε ≈ 0.4, and the 10-class curve plateaus around 37% by ε ≈ 0.5.
 
 The absolute robustness numbers are lower than the paper's (at ε = 0.4 the paper reports about 75% for 10-class and 60% for 2-class; ours are 38% / 7%). We attribute this to missing hyperparameters in the paper's recipe, including: number of PGD iterations, the per-step projection size, and the test-set size used for the evaluation. We keep this part as is for now because of the time constraints.
+
+## Code Structure
+
+```
+dataset.py             synthetic data distribution (Definition 3.1)
+model.py               TwoLayerReLU and MultiClassReLU heads
+resnet.py              CIFAR-style ResNet-18
+
+train.py               train synthetic 2-class network (Step 3)
+train_10class.py       train synthetic 10-class network (Step 3)
+train_cifar.py         train ResNet-18 on CIFAR-10 (Steps 4 and 5)
+train_cifar_head.py    train heads on frozen CIFAR features (Step 4)
+
+analysis.py            cosine matrix for synthetic 2-class (Step 3)
+analysis_10class.py    cosine matrix for synthetic 10-class (Step 3)
+analysis_cifar.py      cosine matrices for CIFAR heads (Step 4)
+
+attack.py              synthetic PGD L2 (Step 5)
+attack_cifar.py        CIFAR-10 PGD L2 (Step 5)
+plot_robust.py         plot synthetic robustness curve (Step 5)
+plot_cifar.py          plot CIFAR robustness curve (Step 5)
+
+checkpoints/           trained model weights and saved attack results
+figures/               reproduction plots; figures/paper/ has paper originals
+scripts/               SLURM scripts used on TRUBA HPC
+data/                  CIFAR-10, auto-downloaded by torchvision on first run
+```
+
+## Running the Code
+
+Install the dependencies once:
+
+```bash
+pip install torch torchvision matplotlib numpy
+```
+
+To reproduce **Step 3 (Figure 2 a, b)**:
+
+```bash
+python train.py             # checkpoints/model_2class.pt
+python train_10class.py     # checkpoints/model_10class.pt
+python analysis.py          # figures/syn_average_repro.png
+python analysis_10class.py  # figures/syn_decouple_repro.png
+```
+
+To reproduce **Step 4 (Figure 2 c, d)** (requires a trained CIFAR-10 ResNet-18):
+
+```bash
+python train_cifar.py       # checkpoints/cifar_2class.pt, cifar_10class.pt
+python train_cifar_head.py  # checkpoints/cifar_heads.pt (3 seeds)
+python analysis_cifar.py    # figures/cifar_average_*.png, cifar_decouple_*.png
+```
+
+To reproduce **Step 5 (Figure 3 robustness curves)**:
+
+```bash
+# synthetic (Figure 3 left)
+python attack.py            # checkpoints/robust_results.pt
+python plot_robust.py       # figures/syn_robust_repro.png
+
+# CIFAR-10 (Figure 3 right), reuses cifar_*class.pt from Step 4
+python attack_cifar.py      # checkpoints/cifar_robust_results.pt
+python plot_cifar.py        # figures/cifar_robust_repro.png
+```
+
+Synthetic training and analysis run in seconds on CPU. CIFAR-10 training of ResNet-18 takes around 30 minutes on a GTX 1060. The heads-only training in Step 4 runs under a minute on GTX 1060.
