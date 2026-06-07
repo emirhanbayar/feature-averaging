@@ -27,7 +27,7 @@ def pgd_l2(forward_fn, x, y, epsilon, alpha, steps):
     return (x + delta).detach()
 
 
-def robust_accuracy(forward_fn, x, y, epsilon, steps=20):
+def robust_accuracy(forward_fn, x, y, epsilon, steps=40):
     """Fraction of points still correctly classified after a PGD-L2 attack of radius epsilon."""
     alpha = epsilon * 2.5 / steps if epsilon > 0 else 0.0
     x_adv = pgd_l2(forward_fn, x, y, epsilon, alpha, steps)
@@ -83,7 +83,7 @@ torch.save(
         "acc_10class": acc_multi,
         "test_seed": 42,
         "test_n": 1000,
-        "pgd_steps": 20,
+        "pgd_steps": 40,
     },
     "checkpoints/robust_results.pt",
 )

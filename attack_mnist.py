@@ -11,7 +11,8 @@ def pgd_l2(model, x, y, epsilon, alpha, steps):
     """Standard L2 PGD (Madry et al.): maximize CE(model(x+delta), y) within an L2 ball.
 
     Attacks each model on its native training loss with its training-time label
-    (digit for the 10-class model, parity for the 2-class model).
+    (digit for the 10-class model, parity for the 2-class model). After each
+    step, perturbed inputs are clipped to the [0, 1] image range.
     """
     if epsilon == 0:
         return x
@@ -19,6 +20,7 @@ def pgd_l2(model, x, y, epsilon, alpha, steps):
     norm = delta.flatten(1).norm(dim=1).view(-1, 1, 1, 1).clamp(min=1e-12)
     delta = delta / norm
     delta = (delta * epsilon * torch.rand(x.size(0), 1, 1, 1, device=x.device)).detach()
+    delta = ((x + delta).clamp(0, 1) - x).detach()      # keep x+delta in [0,1]
     for _ in range(steps):
         delta.requires_grad_(True)
         loss = F.cross_entropy(model(x + delta), y, reduction="sum")
@@ -28,11 +30,12 @@ def pgd_l2(model, x, y, epsilon, alpha, steps):
             delta = delta + alpha * grad / g_norm
             d_norm = delta.flatten(1).norm(dim=1).view(-1, 1, 1, 1).clamp(min=1e-12)
             delta = delta * (epsilon / d_norm).clamp(max=1.0)
+            delta = (x + delta).clamp(0, 1) - x          # keep x+delta in [0,1]
             delta = delta.detach()
     return (x + delta).detach()
 
 
-def robust_accuracy_2class(model, loader, device, epsilon, steps=20):
+def robust_accuracy_2class(model, loader, device, epsilon, steps=40):
     """Attack on CE(parity), evaluate parity via argmax."""
     alpha = epsilon * 2.5 / steps if epsilon > 0 else 0.0
     correct, total = 0, 0
@@ -47,7 +50,7 @@ def robust_accuracy_2class(model, loader, device, epsilon, steps=20):
     return correct / total
 
 
-def robust_accuracy_10class(model, loader, device, epsilon, signs, steps=20):
+def robust_accuracy_10class(model, loader, device, epsilon, signs, steps=40):
     """Attack on CE(digit), evaluate parity via sgn(sum_signs · logits)."""
     alpha = epsilon * 2.5 / steps if epsilon > 0 else 0.0
     correct, total = 0, 0
@@ -103,7 +106,7 @@ def main():
             "acc_10class": acc_10,
             "test_seed": 42,
             "test_n": 1000,
-            "pgd_steps": 20,
+            "pgd_steps": 40,
         },
         "checkpoints/mnist_robust_results.pt",
     )
