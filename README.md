@@ -25,6 +25,18 @@ The difference between $f_{FA}$ and $f_{FD}$ is just in the output head and the 
 
 They start with the synthetic dataset because it matches the theoretical setup exactly: the cluster centers are orthogonal and have equal norms, the loss and optimizer are plain logistic / cross-entropy with gradient descent, and feature averaging or decoupling can be read straight off the cosine matrix between the learned weights and the cluster means. Real datasets only approximate this setup, so they use MNIST and CIFAR-10 as a second sanity check. For MNIST the binary task is parity (odd vs even digits) and the multi-class task is the standard 10-way classification. For CIFAR-10 the binary task merges the first five classes vs the last five, against the same standard 10-way task. In both cases the network is ResNet-18 trained from scratch, the 10-class model is read out as a binary classifier by summing logits per side, and the comparison is robust accuracy under PGD L2 attacks at increasing perturbation radii.
 
+## Reproduction Status
+
+| Initial Plan | Paper figure | Description | Status | See |
+|---|---|---|---|---|
+| Core | Figure 2(a, b) | Synthetic feature averaging vs decoupling cosine heatmaps | Reproduced | Step 3 |
+| Core | Figure 3 (left) | Synthetic PGD-ℓ₂ robustness curve | Reproduced | Step 5 |
+| Extension 1 | Figure 3 (middle) | MNIST parity, ResNet-18 PGD-ℓ₂ robustness | Skipped due to time constraint | n/a |
+| Extension 2 | Figure 2(c, d) | CIFAR-10 feature averaging / decoupling on pretrained ResNet-18 features | Reproduced | Step 4 |
+| Extension 2 | Figure 3 (right) | CIFAR-10 binary vs 10-class ResNet-18 PGD-ℓ₂ robustness | Partially reproduced | Step 5 |
+
+**Partial reproduction of Figure 3 (right).** The qualitative claim of the paper holds in our run: the 10-class model is consistently more robust than the 2-class model at every non-zero ε, and the gap widens monotonically. The absolute robust-accuracy levels are lower than the paper's (about 38% vs 75% for the 10-class model at ε=0.4). The paper does not specify several details of the ResNet-18 training recipe (epochs, learning rate, weight decay, augmentation, input normalization) or the PGD attack hyperparameters (number of iterations, per-step size, random-start protocol, test-set size), See the CIFAR-10 subsection of Step 5 for the detailed discussion.
+
 ## Reproducing the Paper
 
 ### Step 1: Synthetic Data Generation
