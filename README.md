@@ -157,3 +157,34 @@ The 2-class panel already shows the expected block pattern. The 10-class panel i
 | 10-class (FD) | ![](figures/cifar_decouple_repro.png) | ![](figures/paper/cifar_decouple.png) |
 
 The block pattern in 2-class and the diagonal in 10-class are now both clean. Averaging across seeds reflects the feature averaging vs decoupling story even better than the paper's original figure.
+
+### Step 5: Robustness Under PGD L₂ Attacks (Figure 3)
+
+The paper's central empirical claim is that the 10-class model, used as a binary classifier via the summed-logit, is significantly more robust to adversarial perturbations than the 2-class model trained directly. We test this with L₂-bounded PGD attacks at increasing perturbation radii.
+
+The paper specifies only "standard PGD attacks (Madry 2018) with different ℓ2-perturbation radius" and defers the rest to the Madry reference. We follow Madry's recipe directly: 40 PGD iterations, step size α = 2.5·ε/T, random initialization inside the ε-ball, and (for CIFAR-10) clipping x + δ back to [0, 1] after each step. The synthetic attack lives in `attack.py`, the CIFAR attack in `attack_cifar.py`.
+
+**Attacking each model on its native loss.** We first got this part wrong. The paper describes the 10-class model's "binary classification output" (sum of J+ logits minus sum of J- logits). A natural first reading is that PGD should attack this binary readout directly. With that formulation, our 10-class CIFAR model came out *less* robust than the 2-class one. The reason is that attacking the binary readout gives the attacker k=10 free logits to push (the attacker can flip the readout's sign by moving any one of them), while the 2-class network only has 2 output logits to attack. For the 10-class model that means CE on the original CIFAR label, which flips the predicted class but does not necessarily flip the predicted binary group.
+
+```python
+# attack_cifar.py: attack each model on its native CE loss
+loss = F.cross_entropy(model(x + delta), y, reduction="sum")
+```
+
+#### Synthetic dataset
+
+|  | Mine | Paper |
+|---|---|---|
+| Figure 3 (left) | ![](figures/syn_robust_repro.png) | ![](figures/paper/Synthetic-Data-Robustness.png) |
+
+The 2-class model cliffs around ε ≈ 18 and the 10-class around ε ≈ 38. The paper's theoretical gap is √k = √10 ≈ 3.16×; the observed ratio between the two cliffs in our run is roughly 2.1×, which is in the right order of magnitude. Qualitatively the curve shapes matches with the paper.
+
+#### CIFAR-10
+
+|  | Mine | Paper |
+|---|---|---|
+| Figure 3 (right) | ![](figures/cifar_robust_repro.png) | ![](figures/paper/CIFAR10_1.png) |
+
+The qualitative shape matches: 10-class sits consistently above 2-class, the 2-class curve collapses to near zero by ε ≈ 0.4, and the 10-class curve plateaus around 37% by ε ≈ 0.5.
+
+The absolute robustness numbers are lower than the paper's (at ε = 0.4 the paper reports about 75% for 10-class and 60% for 2-class; ours are 38% / 7%). We attribute this to missing hyperparameters in the paper's recipe, including: number of PGD iterations, the per-step projection size, and the test-set size used for the evaluation. We keep this part as is for now because of the time constraints.
