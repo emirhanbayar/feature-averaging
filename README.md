@@ -109,3 +109,51 @@ After training, we compute the cosine similarity between each cluster center μ_
 | 10-class (FD) | ![](figures/syn_decouple_repro.png) | ![](figures/paper/syn_decouple.png) |
 
 The 2-class run shows two clean 5×5 blocks at cosine ≈ 0.44. Each positive neuron is roughly equally aligned with all 5 positive-class clusters, which is the feature-averaging signature. The 10-class run is a sharp diagonal at cosine ≈ 0.99: each neuron has converged to its own cluster center.
+
+### Step 4: CIFAR-10 Feature Averaging and Decoupling (Figure 2 c, d)
+
+This is the same averaging vs decoupling story on real images. The paper reuses the trained CIFAR-10 ResNet-18 (`cifar_10class.pt`) as a frozen feature extractor: the extracted embedding `z ∈ R^512` plays the role of the cluster-feature space, and a fresh small head is trained on top of it. For each CIFAR class we compute the per-class mean feature μ_i, by averaging the embeddings of all images in that class.
+
+Two heads are trained on top of the 50k frozen features, both with the same total head width of 30:
+- **10-class head**: `MultiClassReLU(d=512, k=10, h=3)`, with 30 neurons in 10 groups of 3, softmax cross-entropy on the original CIFAR labels.
+- **2-class head**: `TwoLayerReLU(d=512, m=15)`, with 15 positive + 15 negative neurons, biases, scalar output, logistic loss on the binary labels (first 5 classes → +1, last 5 → −1).
+
+To compare them at a common shape, the 2-class network's 15 + 15 weights are equally split into 5 + 5 groups of 3 and averaged within each group. This gives 10 "equivalent weights" for the binary network that line up against the 10 equivalent weights of the multi-class one.
+
+The other hyperparameters are not stated in the paper, so we keep the same recipe as the synthetic experiment: plain full-batch gradient descent for T=300 iterations, learning rate eta=0.01. 
+
+```python
+head10 = MultiClassReLU(d=512, k=10, h=3, sigma_w=1e-2, seed=seed)
+# F.cross_entropy(head10(z), y10) ...
+
+head2 = TwoLayerReLU(d=512, m=15, sigma_w=1e-2, sigma_b=1e-2, seed=seed)
+# F.softplus(-y_binary * head2(z)).mean() ...
+
+# Equivalent weights
+W10 = head10.W.reshape(10, 3, 512).mean(dim=1)                            # (10, 512)
+W2  = torch.cat([head2.W[:15].reshape(5, 3, 512).mean(dim=1),
+                 head2.W[15:].reshape(5, 3, 512).mean(dim=1)], dim=0)     # (10, 512)
+```
+
+The training script is `train_cifar_head.py` and the cosine analysis in `analysis_cifar.py`.
+
+#### Single-seed result
+
+Running the above once with seed=0:
+
+|  | 2-class | 10-class |
+|---|---|---|
+| Mine (seed 0) | ![](figures/cifar_average_seed0.png) | ![](figures/cifar_decouple_seed0.png) |
+
+The 2-class panel already shows the expected block pattern. The 10-class panel is a problem: only 7 of the 10 diagonal entries light up. Three columns (`w_6`, `w_7`, `w_10`, corresponding to CIFAR's "dog", "frog", "truck") are completely flat, meaning those 3-neuron groups never decoupled into the respective cluster features. This matches the training accuracy of the 10-class head, which ended at only 69.9% on the train set with this seed, far below the pretrained ResNet-18's clean accuracy of around 95%. We guess that the missed hyperparameters (initialization scale, learning rate, number of iterations) not missing the those authprs used might be the problem. To mitigate this, we can run multiple seeds and average the cosine matrices across them.
+
+#### Averaging across seeds
+
+ Running the same procedure with seeds {0, 1, 2}, the per-seed training accuracies of the 10-class head are 70%, 90%, and 99.9%, and the averaged cosine matrices look like:
+
+|  | Mine (averaged over 3 seeds) | Paper |
+|---|---|---|
+| 2-class (FA) | ![](figures/cifar_average_repro.png) | ![](figures/paper/cifar_average.png) |
+| 10-class (FD) | ![](figures/cifar_decouple_repro.png) | ![](figures/paper/cifar_decouple.png) |
+
+The block pattern in 2-class and the diagonal in 10-class are now both clean. Averaging across seeds reflects the feature averaging vs decoupling story even better than the paper's original figure.
