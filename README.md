@@ -117,8 +117,8 @@ After training, we compute the cosine similarity between each cluster center μ_
 
 |  | Mine | Paper |
 |---|---|---|
-| 2-class (FA) | ![](figures/syn_average_repro.png) | ![](figures/paper/syn_average.png) |
-| 10-class (FD) | ![](figures/syn_decouple_repro.png) | ![](figures/paper/syn_decouple.png) |
+| 2-class (FA) | <img src="figures/syn_average_repro.png" width="400"/> | <img src="figures/paper/syn_average.png" width="400"/> |
+| 10-class (FD) | <img src="figures/syn_decouple_repro.png" width="400"/> | <img src="figures/paper/syn_decouple.png" width="400"/> |
 
 The 2-class run shows two clean 5×5 blocks at cosine ≈ 0.44. Each positive neuron is roughly equally aligned with all 5 positive-class clusters, which is the feature-averaging signature. The 10-class run is a sharp diagonal at cosine ≈ 0.99: each neuron has converged to its own cluster center.
 
@@ -155,7 +155,7 @@ Running the above once with seed=0:
 
 |  | 2-class | 10-class |
 |---|---|---|
-| Mine (seed 0) | ![](figures/cifar_average_seed0.png) | ![](figures/cifar_decouple_seed0.png) |
+| Mine (seed 0) | <img src="figures/cifar_average_seed0.png" width="400"/> | <img src="figures/cifar_decouple_seed0.png" width="400"/> |
 
 The 2-class panel already shows the expected block pattern. The 10-class panel is a problem: only 7 of the 10 diagonal entries light up. Three columns (`w_6`, `w_7`, `w_10`, corresponding to CIFAR's "dog", "frog", "truck") are completely flat, meaning those 3-neuron groups never decoupled into the respective cluster features. This matches the training accuracy of the 10-class head, which ended at only 69.9% on the train set with this seed, far below the pretrained ResNet-18's clean accuracy of around 95%. We guess that the missed hyperparameters (initialization scale, learning rate, number of iterations) not missing the those authprs used might be the problem. To mitigate this, we can run multiple seeds and average the cosine matrices across them.
 
@@ -165,8 +165,8 @@ The 2-class panel already shows the expected block pattern. The 10-class panel i
 
 |  | Mine (averaged over 3 seeds) | Paper |
 |---|---|---|
-| 2-class (FA) | ![](figures/cifar_average_repro.png) | ![](figures/paper/cifar_average.png) |
-| 10-class (FD) | ![](figures/cifar_decouple_repro.png) | ![](figures/paper/cifar_decouple.png) |
+| 2-class (FA) | <img src="figures/cifar_average_repro.png" width="400"/> | <img src="figures/paper/cifar_average.png" width="400"/> |
+| 10-class (FD) | <img src="figures/cifar_decouple_repro.png" width="400"/> | <img src="figures/paper/cifar_decouple.png" width="400"/> |
 
 The block pattern in 2-class and the diagonal in 10-class are now both clean. Averaging across seeds reflects the feature averaging vs decoupling story even better than the paper's original figure.
 
@@ -187,7 +187,7 @@ loss = F.cross_entropy(model(x + delta), y, reduction="sum")
 
 |  | Mine | Paper |
 |---|---|---|
-| Figure 3 (left) | ![](figures/syn_robust_repro.png) | ![](figures/paper/Synthetic-Data-Robustness.png) |
+| Figure 3 (left) | <img src="figures/syn_robust_repro.png" width="400"/> | <img src="figures/paper/Synthetic-Data-Robustness.png" width="400"/> |
 
 The 2-class model cliffs around ε ≈ 18 and the 10-class around ε ≈ 38. The paper's theoretical gap is √k = √10 ≈ 3.16×; the observed ratio between the two cliffs in our run is roughly 2.1×, which is in the right order of magnitude. Qualitatively the curve shapes matches with the paper.
 
@@ -195,7 +195,7 @@ The 2-class model cliffs around ε ≈ 18 and the 10-class around ε ≈ 38. The
 
 |  | Mine | Paper |
 |---|---|---|
-| Figure 3 (right) | ![](figures/cifar_robust_repro.png) | ![](figures/paper/CIFAR10_1.png) |
+| Figure 3 (right) | <img src="figures/cifar_robust_repro.png" width="400"/> | <img src="figures/paper/CIFAR10_1.png" width="400"/> |
 
 The qualitative shape matches: 10-class sits consistently above 2-class, the 2-class curve collapses to near zero by ε ≈ 0.4, and the 10-class curve plateaus around 37% by ε ≈ 0.5.
 
