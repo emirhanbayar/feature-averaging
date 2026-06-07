@@ -46,8 +46,8 @@ def sample_test_set(mean_vectors, class_labels, n, alpha, sigma, seed):
     return torch.from_numpy(x).float(), torch.from_numpy(y).float()
 
 
-ckpt_bin = torch.load("model_2class.pt", weights_only=False)
-ckpt_multi = torch.load("model_10class.pt", weights_only=False)
+ckpt_bin = torch.load("checkpoints/model_2class.pt", weights_only=False)
+ckpt_multi = torch.load("checkpoints/model_10class.pt", weights_only=False)
 cfg_bin = ckpt_bin["config"]
 cfg_multi = ckpt_multi["config"]
 
@@ -85,6 +85,6 @@ torch.save(
         "test_n": 1000,
         "pgd_steps": 20,
     },
-    "robust_results.pt",
+    "checkpoints/robust_results.pt",
 )
-print("saved robust_results.pt")
+print("saved checkpoints/robust_results.pt")

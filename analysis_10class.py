@@ -1,7 +1,7 @@
 import torch
 import matplotlib.pyplot as plt
 
-from model import TwoLayerReLU
+from model import MultiClassReLU
 
 
 def cosine_matrix(features, weights):
@@ -10,14 +10,15 @@ def cosine_matrix(features, weights):
     return f @ w.t()
 
 
-ckpt = torch.load("checkpoints/model_2class.pt", weights_only=False)
+ckpt = torch.load("checkpoints/model_10class.pt", weights_only=False)
 cfg = ckpt["config"]
 
-model = TwoLayerReLU(d=cfg["d"], m=cfg["m"])
+model = MultiClassReLU(d=cfg["d"], k=cfg["k"], h=cfg["h"])
 model.load_state_dict(ckpt["state_dict"])
 
 mu = ckpt["mean_vectors"]
-weights = model.W.detach()
+# equivalent weight per sub-network: (1/h) sum over r
+weights = model.W.detach().reshape(cfg["k"], cfg["h"], cfg["d"]).mean(dim=1)
 
 M = cosine_matrix(mu, weights)
 
@@ -26,4 +27,4 @@ plt.colorbar()
 plt.xlabel("neuron weight")
 plt.ylabel("cluster feature")
 plt.title("cos(mu_i, w_j)")
-plt.savefig("figures/syn_average_repro.png")
+plt.savefig("figures/syn_decouple_repro.png")

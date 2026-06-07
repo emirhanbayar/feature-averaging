@@ -57,9 +57,9 @@ def main(cfg=CONFIG):
             "mean_vectors": torch.from_numpy(ds.mean_vectors).float(),  # cluster features mu_i
             "class_labels": torch.from_numpy(ds.class_labels),          # +1/-1 per cluster
         },
-        "model_2class.pt",
+        "checkpoints/model_2class.pt",
     )
-    print("saved model_2class.pt")
+    print("saved checkpoints/model_2class.pt")
     return model, ds
 
 

@@ -24,6 +24,23 @@ class TwoLayerReLU(nn.Module):
         pre = x @ self.W.t() + self.b          # (batch, 2m) pre-activations
         return relu(pre) @ self.a              # (batch,)
 
+
+class MultiClassReLU(nn.Module):
+
+    def __init__(self, d, k=10, h=1, sigma_w=1e-5, seed=None):
+        super().__init__()
+        self.d, self.k, self.h = d, k, h
+
+        gen = torch.Generator().manual_seed(seed) if seed is not None else None
+
+        # first layer -- trainable; k*h neurons in k groups of h, no bias
+        self.W = nn.Parameter(torch.empty(k * h, d).normal_(0.0, sigma_w, generator=gen))
+
+    def forward(self, x):
+        """x: (batch, d) -> per-class logits f(x): (batch, k)."""
+        pre = x @ self.W.t()                                       # (batch, k*h)
+        return relu(pre).reshape(-1, self.k, self.h).mean(dim=2)   # (batch, k)
+
     @torch.no_grad()
     def predict(self, x):
         """Binary prediction sgn(f(x)) in {-1, +1} (clean-accuracy convention)."""

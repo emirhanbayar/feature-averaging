@@ -51,9 +51,9 @@ def main(cfg=CONFIG):
             "mean_vectors": torch.from_numpy(ds.mean_vectors).float(),
             "class_labels": torch.from_numpy(ds.class_labels),
         },
-        "model_10class.pt",
+        "checkpoints/model_10class.pt",
     )
-    print("saved model_10class.pt")
+    print("saved checkpoints/model_10class.pt")
     return model, ds
 
 

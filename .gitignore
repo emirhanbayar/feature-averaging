@@ -7,3 +7,8 @@ __pycache__/
 .ipynb_checkpoints/
 data/
 paper_tex_source/
+logs/
+
+# large model checkpoints
+checkpoints/mnist_*.pt
+checkpoints/cifar_*.pt
